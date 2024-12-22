@@ -73,6 +73,7 @@ FORECAST_DATE = "2022-12-25"
 ## Visualization
 
 `visualizations/Clustering_viz.html` : To visualize clustering  results
+URL : https://raw.githack.com/Sapphirine/202412-26-Solar-Energy-Forecasting-for-PV-Performance-and-Integration/refs/heads/main/visualizations/Clustering_viz.html
 
 `visualizations/dashboard.html` : To visualize forecast results for Cluster 3 & 6 along with their respective Points. This html renders the data from a GCS bucket but the url can be updated to the corresponding local files in dir `data/forecast_results`
 
