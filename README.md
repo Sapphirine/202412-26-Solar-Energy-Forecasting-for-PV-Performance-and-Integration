@@ -1,4 +1,4 @@
-# eecse_6893_g26_final_project
+# 202412-26-Solar-Energy-Forecasting-for-PV-Performance-and-Integration
 
 The goal of this project is to build a model that leverages the seasonality of weather and solar irradiance data in order to create a day-ahead forecast for solar power output. This structure is inspired by the real-world market structures in place today with a day-ahead, security-constrained unit commitment optimization in a bilateral bidding system. This is accomplished using publicly available data sets, isolating & clustering by geolocation, day-ahead [NeuralProphet](https://neuralprophet.com/) forecast modeling, and statistical analysis of methods and results. 
 
@@ -56,7 +56,7 @@ python3.8 main.py
 
 ### Run in AirFlow
 
-After setting up airflow environment and starting the scheduler, clone this repo in the `airflow/dags` dir. 
+After setting up Apache Airflow environment and starting the scheduler, clone this repo in the `airflow/dags` dir. 
 Make sure to install all dependencies by running the above `pip install` command. 
 
 Run
@@ -72,9 +72,7 @@ FORECAST_DATE = "2022-12-25"
 
 ## Visualization
 
-`visualizations/Clustering_viz.html` : To visualize cluserting  results
-
- URL: https://raw.githack.com/tsopel/eecse_6893_g26_final_project/refs/heads/main/visualizations/Clustering_viz.html?token=GHSAT0AAAAAAC3M2357XWC3S5KXRPGLON3CZ3IPYCQ 
+`visualizations/Clustering_viz.html` : To visualize clustering  results
 
 `visualizations/dashboard.html` : To visualize forecast results for Cluster 3 & 6 along with their respective Points. This html renders the data from a GCS bucket but the url can be updated to the corresponding local files in dir `data/forecast_results`
 
