@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Solar Prediction</title>
+  <script src="https://d3js.org/d3.v5.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #1d0f0f;
+      text-align: left;
+      padding: 8px;
+    }
+    th {
+      background-color: #fff8e7;
+    }
+    .lbias1 {
+        position:fixed; 
+        top:10px; 
+        left:800px; 
+        margin-left:10px; 
+        margin-right:10px;
+    }
+    
+
+ 
+
+  </style>
+  
+</head>
+<body>
+    <h1>Time-series Prediction: Predicted vs True GHI</h1>
+    <div class="lbias1"> 
+        <h3> Legend </h3>
+        <p style="color:steelblue"> True </p>
+        <p style="color:orange"> Predicted</p>
+        <p style="color:red"> Point 1</p>
+        <p style="color:green"> Point 2</p>
+    </div>
+
+    
+    <!-- results of average clustering 1 -->
+
+    <!-- TABLE 1a: ypred vs y true of cluster -->
+    <h2> Averaged Data Results - Cluster 3 </h2>
+    <div id="cluster-tab1"></div>
+    <table id="cluster1"></table>
+    
+    <!-- TABLE 2a: METRICS FOR CLUSTER 1 -->
+    
+    <h2> Averaged Data Metrics - Cluster 3</h2>
+    <div id="cluster-met1"></div>
+    <table id="clustermet1"></table>
+    
+    <!-- TABLE 3a: CLUSTER 1 VS SUBSET OF POINTS -->
+    
+    <h2>Cluster 3 and Sample Points</h2>
+    <div id="cluster-sub1"></div>
+    <table id="clustersub1"></table>
+
+    <!-- TABLE 4a: SUBSET OF CLUSTER METRICS -->
+
+    <h2>Cluster 3 and Sample Point Metrics</h2>
+    <div id="cluster-all1"></div>
+    <table id="clusterall1"></table>
+
+
+    <!-- results of averaged clustering 2 -->
+
+    <!-- TABLE 1b: ypred vs y true of cluster -->
+    <h2> Averaged Data Results - Cluster 6 </h2>
+    <div id="cluster-tab2"></div>
+    <table id="cluster2"></table>
+    
+    <!-- TABLE 2b: METRICS FOR CLUSTER 1 -->
+    
+    <h2> Averaged Data Metrics - Cluster 6</h2>
+    <div id="cluster-met2"></div>
+    <table id="clustermet2"></table>
+    
+    <!-- TABLE 3b: CLUSTER 1 VS SUBSET OF POINTS -->
+    
+    <h2> Cluster 6 and Sample Points</h2>
+    <div id="cluster-sub2"></div>
+    <table id="clustersub2"></table>
+
+    <!-- TABLE 4b: SUBSET OF CLUSTER METRICS -->
+
+    <h2> Cluster 6 and Sample Point Metrics</h2>
+    <div id="cluster-all2"></div>
+    <table id="clusterall2"></table>
+
+        
+
+
+</script>
+
+  <script>
+
+
+    // Cluster 3: ds, y_pred and y_true PLOT 1A
+    // script for line graph of results
+
+
+    // public url to results hosted on gcp: cluster 3
+    const URL1a = "https://storage.googleapis.com/forecast_results/Cluster_3_Avg_Forecast_2022-12-13.csv";
+
+    // custom parse function for timestamps since they have colons in the times
+    const parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
+
+
+    const offset1a = -300; // offset data by 5 hours
+
+    // retrieve csv columns
+    d3.csv(URL1a, d =>{
+        let date1a = new Date(d.ds);
+        date1a.setMinutes(date1a.getMinutes() + offset1a);
+    //   ds: parseDate(d.ds) // created a custom date 
+      return {
+        ds: date1a,
+        y_true: +d.y_true,   
+        y_pred: +d.y_pred};    
+    }).then(data1a => {
+      console.log("cluster3 data1a", data1a);
+
+      // chart size params
+      const width = 600;
+      const height = 400;
+      const marginTop = 20;
+      const marginRight = 20;
+      const marginBottom = 30;
+      const marginLeft = 30;
+
+      // bounds for axes 
+      const maxDate1a = d3.max(data1a, d => d.ds);
+      const minDate1a = d3.min(data1a, d => d.ds);
+
+
+      const maxVal = 750;
+      const minVal = 0;
+
+      // position scaling
+      const x = d3.scaleUtc()
+        .domain([minDate1a, maxDate1a])
+        .range([marginLeft, width - marginRight]);
+
+        console.log("1a mindate", minDate1a);
+        console.log("1a maxdate", maxDate1a);
+
+      const y = d3.scaleLinear()
+        .domain([minVal, maxVal])
+        .range([height - marginBottom, marginTop]);
+
+      // axes
+      const xAxis = d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0);
+      const yAxis = d3.axisLeft(y);
+
+      // svg container
+      const svg = d3.select("#cluster-tab1")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;");
+
+      // append each axis
+      svg.append("g")
+        .attr("transform", `translate(0,${height - marginBottom})`)
+        .call(xAxis);
+
+      svg.append("g")
+        .attr("transform", `translate(${marginLeft},0)`)
+        .call(yAxis);
+
+      // generate lines 
+      const line1a = d3.line()
+        .x(d => x(d.ds))
+        .y(d => y(d.y_true));
+
+      const line2a = d3.line()
+        .x(d => x(d.ds))
+        .y(d => y(d.y_pred));
+
+      // defn chart group
+      const chartGroup = svg.append('g');
+
+      // append lines to group
+      chartGroup.append('path')
+        .datum(data1a)
+        .attr('fill', 'none')
+        .attr('stroke', 'steelblue')
+        .attr('stroke-width', 1.5)
+        .attr('d', line1a);
+
+      chartGroup.append('path')
+        .datum(data1a)
+        .attr('fill', 'none')
+        .attr('stroke', 'orange')
+        .attr('stroke-width', 1.5)
+        .attr('d', line2a);
+
+
+  }); // END CLUSTER 3 SCRIPT PLOT 1A
+
+
+  // AVERAGE DATA METRICS -  PLOT 2A
+const URL2a = "https://storage.googleapis.com/forecast_results/Cluster_3_Avg_Forecast_2022-12-13_metrics.csv";
+  
+  formatDate = d3.timeFormat("%b %d, %Y")
+
+  d3.csv(URL2a, function(d) {
+  // Row conversion logic
+  return {
+    date: formatDate(new Date(2022,11,13)), // test - remove if chart does not compile, months are 0 indexed 
+    MAE: +d.MAE,
+    sMAPE: +d.sMAPE,
+    RMSE: +d.RMSE,
+    "Model Hubor Loss": +d["Model Hubor Loss"]
+  };
+  }).then(data2a => {
+  console.log("Loaded Data 2a:", data2a);
+  
+  
+  // Select the table element
+  const table = d3.select("#cluster-met1");
+  
+  // Append table header
+  const thead = table.append("thead");
+  const headerRow = thead.append("tr");
+  Object.keys(data2a[0]).forEach(column => {
+    headerRow.append("th").text(column);
+  });
+  
+  // Append table body
+  const tbody = table.append("tbody");
+  data2a.forEach(row => {
+    const tr = tbody.append("tr");
+    Object.values(row).forEach(value => {
+      tr.append("td").text(value);
+    });
+  });
+  }).catch(error => {
+  console.error("Error loading CSV data in 2a:", error);
+  });
+  
+  // END CLUSTERED DATA MATRICS PLOT 2A
+
+
+  // BEGIN PLOTS CLUSTER VS SUBSET OF POINTS PLOT 3A
+
+const URL3a = "https://storage.googleapis.com/forecast_results/Combined_Cluster3_Points_Forecast_2022-12-13.csv";
+
+// custom parse function for timestamps since they have colons in the times
+// const parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
+offset3a = -300;
+// retrieve csv columns
+d3.csv(URL3a, d=> {
+//   ds: parseDate(d.ds) // created a custom date 
+    let date3a = new Date(d.ds);
+    date3a.setMinutes(date3a.getMinutes() + offset3a);
+  return {
+    ds: date3a,
+    y_pred_cluster: +d.y_pred_cluster,
+    y_true_cluster: +d.y_true_cluster,
+    y_true_point_1: +d.y_true_point_1,
+    y_true_point_2: +d.y_true_point_2,
+  };
+}).then(data3a => {
+  console.log("cluster3 data", data3a);
+
+  // chart size params
+  const width = 600;
+  const height = 400;
+  const marginTop = 20;
+  const marginRight = 20;
+  const marginBottom = 30;
+  const marginLeft = 30;
+
+  // bounds for axes 
+  const maxDate3a = d3.max(data3a, d => d.ds);
+  const minDate3a = d3.min(data3a, d => d.ds);
+
+  const maxVal = 750;
+  const minVal = 0;
+
+  console.log("3a mindate", minDate3a);
+  console.log("3a maxdate", maxDate3a);
+  
+  // position scaling
+  const x = d3.scaleUtc()
+    .domain([minDate3a, maxDate3a])
+    .range([marginLeft, width - marginRight]);
+
+  const y = d3.scaleLinear()
+    .domain([minVal, maxVal])
+    .range([height - marginBottom, marginTop]);
+
+  // axes
+  const xAxis = d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0);
+  const yAxis = d3.axisLeft(y);
+
+  // svg container
+  const svg = d3.select("#cluster-sub1")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("viewBox", [0, 0, width, height])
+    .attr("style", "max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;");
+
+  // append each axis
+  svg.append("g")
+    .attr("transform", `translate(0,${height - marginBottom})`)
+    .call(xAxis);
+
+  svg.append("g")
+    .attr("transform", `translate(${marginLeft},0)`)
+    .call(yAxis);
+
+  // generate lines 
+
+  // line for ytrue
+  const line13a = d3.line()
+    .x(d => x(d.ds))
+    .y(d => y(d.y_true_cluster));
+
+// line for ypred
+
+  const line23a = d3.line()
+    .x(d => x(d.ds))
+    .y(d => y(d.y_pred_cluster));
+
+    // line for point 1 true
+
+const line1p3a = d3.line()
+    .x(d => x(d.ds))
+    .y(d => y(d.y_true_point_1));
+
+    // line for point 2 true
+
+const line2p3a = d3.line()
+    .x(d => x(d.ds))
+    .y(d => y(d.y_true_point_2));
+
+  // defn chart group
+  const chartGroup = svg.append('g');
+
+  // append lines to group
+  chartGroup.append('path')
+    .datum(data3a)
+    .attr('fill', 'none')
+    .attr('stroke', 'steelblue')
+    .attr('stroke-width', 2)
+    .attr('d', line13a);
+
+  chartGroup.append('path')
+    .datum(data3a)
+    .attr('fill', 'none')
+    .attr('stroke', 'orange')
+    .attr('stroke-width', 1.25)
+    .attr('d', line23a);
+
+    chartGroup.append('path')
+    .datum(data3a)
+    .attr('fill', 'none')
+    .attr('stroke', 'red')
+    .attr('stroke-width', 1.25)
+    .attr('d', line1p3a);
+
+    chartGroup.append('path')
+    .datum(data3a)
+    .attr('fill', 'none')
+    .attr('stroke', 'green')
+    .attr('stroke-width', 1.5)
+    .attr('d', line2p3a);
+
+
+}); // END CLUSTER 3 SCRIPT PLOT 3A
+
+  // BEGIN PLOTS CLUSTERED 3 DATA METRICS  - CLUSTER AND POINTS PLOT 4A
+  const URL4a = "https://storage.googleapis.com/forecast_results/Cluster3_Points_Forecast_2022-12-13_metrics.csv";
+
+  // date format of 2022-12-13 to Month Day, Year
+  const formatDate4a = d3.timeFormat("%b %d, %Y")
+  
+  d3.csv(URL4a, function(d) {
+  // Row conversion logic
+  return {
+    Point_ID: d.Point_ID,
+    date: formatDate4a(new Date(2022,11,13)),
+    MAE: +d.MAE,
+    sMAPE: +d.sMAPE,
+    RMSE: +d.RMSE
+  };
+}).then(data4a => {
+  console.log("Loaded Data 4a:", data4a);
+
+  // Select the table element
+  const table = d3.select("#cluster-all1");
+
+  // Append table header
+  const thead = table.append("thead");
+  const headerRow = thead.append("tr");
+  Object.keys(data4a[0]).forEach(column => {
+    headerRow.append("th").text(column);
+  });
+
+  // Append table body
+  const tbody = table.append("tbody");
+  data4a.forEach(row => {
+    const tr = tbody.append("tr");
+    Object.values(row).forEach(value => {
+      tr.append("td").text(value);
+    });
+  });
+}).catch(error => {
+  console.error("Error loading CSV data:", error);
+});
+// END CLUSTER + POINT METRICS FOR CLUSTER 3
+
+
+// CLUSTER 6 PLOTS
+
+// public url to results hosted on gcp: cluster 6
+const URL1b = "https://storage.googleapis.com/forecast_results/Cluster_6_Avg_Forecast_2022-12-13.csv";
+
+// custom parse function for timestamps since they have colons in the times
+const parseDate1b = d3.timeParse("%Y-%m-%d %H:%M:%S");
+offset1b = -300;
+
+// retrieve csv columns
+d3.csv(URL1b, d => {
+
+    let date1b = new Date(d.ds);
+    date1b.setMinutes(date1b.getMinutes() + offset1b);
+  return {
+    ds: date1b,
+    y_true: +d.y_true,   
+    y_pred: +d.y_pred};    
+}).then(data1b => {
+  console.log("cluster3 data1b", data1b);
+
+  // chart size params
+  const width = 600;
+  const height = 400;
+  const marginTop = 20;
+  const marginRight = 20;
+  const marginBottom = 30;
+  const marginLeft = 30;
+
+  // bounds for axes 
+  const maxDate = d3.max(data1b, d => d.ds);
+  const minDate = d3.min(data1b, d => d.ds);
+  console.log("1b mindate", minDate)
+  const maxVal = 750;
+  const minVal = 0;
+
+  // position scaling
+  const x = d3.scaleUtc()
+    .domain([minDate, maxDate])
+    .range([marginLeft, width - marginRight]);
+
+  const y = d3.scaleLinear()
+    .domain([minVal, maxVal])
+    .range([height - marginBottom, marginTop]);
+
+  // axes
+  const xAxis = d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0);
+  const yAxis = d3.axisLeft(y);
+
+  // svg container
+  const svg = d3.select("#cluster-tab2")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("viewBox", [0, 0, width, height])
+    .attr("style", "max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;");
+
+  // append each axis
+  svg.append("g")
+    .attr("transform", `translate(0,${height - marginBottom})`)
+    .call(xAxis);
+
+  svg.append("g")
+    .attr("transform", `translate(${marginLeft},0)`)
+    .call(yAxis);
+
+  // generate lines 
+  const line1b = d3.line()
+    .x(d => x(d.ds))
+    .y(d => y(d.y_true));
+
+  const line2b = d3.line()
+    .x(d => x(d.ds))
+    .y(d => y(d.y_pred));
+
+  // defn chart group
+  const chartGroup = svg.append('g');
+
+  // append lines to group
+  chartGroup.append('path')
+    .datum(data1b)
+    .attr('fill', 'none')
+    .attr('stroke', 'steelblue')
+    .attr('stroke-width', 1.5)
+    .attr('d', line1b);
+
+  chartGroup.append('path')
+    .datum(data1b)
+    .attr('fill', 'none')
+    .attr('stroke', 'orange')
+    .attr('stroke-width', 1.5)
+    .attr('d', line2b);
+
+
+}); // END CLUSTER 3 SCRIPT PLOT 1B
+
+
+// AVERAGE DATA METRICS -  PLOT 2B
+const URL2b = "https://storage.googleapis.com/forecast_results/Cluster_6_Avg_Forecast_2022-12-13_metrics.csv";
+
+formatDate2b = d3.timeFormat("%b %d, %Y")
+
+d3.csv(URL2b, function(d) {
+// Row conversion logic
+return {
+date: formatDate2b(new Date(2022,11,13)), // test - remove if chart does not compile, months are 0 indexed 
+MAE: +d.MAE,
+sMAPE: +d.sMAPE,
+RMSE: +d.RMSE,
+"Model Hubor Loss": +d["Model Hubor Loss"]
+};
+}).then(data2b => {
+console.log("Loaded Data 2b:", data2b);
+
+
+// Select the table element
+const table = d3.select("#cluster-met2");
+
+// Append table header
+const thead = table.append("thead");
+const headerRow = thead.append("tr");
+Object.keys(data2b[0]).forEach(column => {
+headerRow.append("th").text(column);
+});
+
+// Append table body
+const tbody = table.append("tbody");
+data2b.forEach(row => {
+const tr = tbody.append("tr");
+Object.values(row).forEach(value => {
+  tr.append("td").text(value);
+});
+});
+}).catch(error => {
+console.error("Error loading CSV data in 2b:", error);
+});
+
+// END CLUSTERED DATA MATRICS PLOT 2B
+
+
+// BEGIN PLOTS CLUSTER VS SUBSET OF POINTS PLOT 3B
+
+const URL3b = "https://storage.googleapis.com/forecast_results/Combined_Cluster6_Points_Forecast_2022-12-13.csv";
+
+// custom parse function for timestamps since they have colons in the times
+// const parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
+
+// retrieve csv columns
+offset3b = -300;
+
+d3.csv(URL3b, d => {
+ let date3b = new Date(d.ds);
+ date3b.setMinutes(date3b.getMinutes() + offset3b);
+return {
+ds: date3b,
+y_pred_cluster: +d.y_pred_cluster,
+y_true_cluster: +d.y_true_cluster,
+y_true_point_1: +d.y_true_point_1,
+y_true_point_2: +d.y_true_point_2,
+};
+}).then(data3b => {
+console.log("cluster3b data", data3b);
+
+// chart size params
+const width = 600;
+const height = 400;
+const marginTop = 20;
+const marginRight = 20;
+const marginBottom = 30;
+const marginLeft = 30;
+
+// bounds for axes 
+const maxDate = d3.max(data3b, d => d.ds);
+const minDate = d3.min(data3b, d => d.ds);
+const maxVal = 750;
+const minVal = 0;
+
+// position scaling
+const x = d3.scaleUtc()
+.domain([minDate, maxDate])
+.range([marginLeft, width - marginRight]);
+
+const y = d3.scaleLinear()
+.domain([minVal, maxVal])
+.range([height - marginBottom, marginTop]);
+
+// axes
+const xAxis = d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0);
+const yAxis = d3.axisLeft(y);
+
+// svg container
+const svg = d3.select("#cluster-sub2")
+.append("svg")
+.attr("width", width)
+.attr("height", height)
+.attr("viewBox", [0, 0, width, height])
+.attr("style", "max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;");
+
+// append each axis
+svg.append("g")
+.attr("transform", `translate(0,${height - marginBottom})`)
+.call(xAxis);
+
+svg.append("g")
+.attr("transform", `translate(${marginLeft},0)`)
+.call(yAxis);
+
+// generate lines 
+
+// line for ytrue
+const line13b = d3.line()
+.x(d => x(d.ds))
+.y(d => y(d.y_true_cluster));
+
+// line for ypred
+
+const line23b = d3.line()
+.x(d => x(d.ds))
+.y(d => y(d.y_pred_cluster));
+
+// line for point 1 true
+
+const line1p3b = d3.line()
+.x(d => x(d.ds))
+.y(d => y(d.y_true_point_1));
+
+// line for point 2 true
+
+const line2p3b = d3.line()
+.x(d => x(d.ds))
+.y(d => y(d.y_true_point_2));
+
+// defn chart group
+const chartGroup = svg.append('g');
+
+// append lines to group
+chartGroup.append('path')
+.datum(data3b)
+.attr('fill', 'none')
+.attr('stroke', 'steelblue')
+.attr('stroke-width', 2)
+.attr('d', line13b);
+
+chartGroup.append('path')
+.datum(data3b)
+.attr('fill', 'none')
+.attr('stroke', 'orange')
+.attr('stroke-width', 1.25)
+.attr('d', line23b);
+
+chartGroup.append('path')
+.datum(data3b)
+.attr('fill', 'none')
+.attr('stroke', 'red')
+.attr('stroke-width', 1.25)
+.attr('d', line1p3b);
+
+chartGroup.append('path')
+.datum(data3b)
+.attr('fill', 'none')
+.attr('stroke', 'green')
+.attr('stroke-width', 1.5)
+.attr('d', line2p3b);
+
+
+}); // END CLUSTER 3 SCRIPT PLOT 3B
+
+// BEGIN PLOTS CLUSTERED 3 DATA METRICS  - CLUSTER AND POINTS PLOT 4B
+const URL4b = "https://storage.googleapis.com/forecast_results/Cluster6_Points_Forecast_2022-12-13_metrics.csv";
+
+// date format of 2022-12-13 to Month Day, Year
+const formatDate4b = d3.timeFormat("%b %d, %Y")
+
+d3.csv(URL4b, d => {
+
+return {
+Point_ID: d.Point_ID,
+date: formatDate4b(new Date(2022,11,11)),
+MAE: +d.MAE,
+sMAPE: +d.sMAPE,
+RMSE: +d.RMSE
+};
+}).then(data4b => {
+console.log("Loaded Data 4b:", data4b);
+
+// Select the table element
+const table = d3.select("#cluster-all2");
+
+// Append table header
+const thead = table.append("thead");
+const headerRow = thead.append("tr");
+Object.keys(data4b[0]).forEach(column => {
+headerRow.append("th").text(column);
+});
+
+// Append table body
+const tbody = table.append("tbody");
+data4b.forEach(row => {
+const tr = tbody.append("tr");
+Object.values(row).forEach(value => {
+  tr.append("td").text(value);
+});
+});
+}).catch(error => {
+console.error("Error loading CSV data:", error);
+});
+// END CLUSTER 4B + POINT METRICS FOR CLUSTER 6 
+
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+pandas
+numpy
+matplotlib
+neuralprophet
+numpy
+scikit-learn
+h5pyd
+folium
+pyspark
