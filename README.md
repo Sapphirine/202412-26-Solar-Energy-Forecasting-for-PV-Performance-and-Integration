@@ -83,7 +83,7 @@ URL : https://raw.githack.com/Sapphirine/202412-26-Solar-Energy-Forecasting-for-
 
 `notebooks/NeuralProphet_Model_Exploration.ipynb` : Explores NeuralProphet Forecasting Models through hyperparameter tuning
 
-### Youtube Presentation Link
+### Presentation YouTube Link
 
 https://youtu.be/pr9uRsQJTNw
 
